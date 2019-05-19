@@ -18,14 +18,15 @@
 use std::error;
 use std::fmt;
 use std::io;
+use std::num::ParseIntError;
 
 // PositiveNonzeroInteger is a struct defined below the tests.
-fn read_and_validate(b: &mut io::BufRead) -> Result<PositiveNonzeroInteger, ???> {
+fn read_and_validate(b: &mut io::BufRead) -> Result<PositiveNonzeroInteger, Box<error::Error>> {
     let mut line = String::new();
-    b.read_line(&mut line);
-    let num: i64 = line.trim().parse();
-    let answer = PositiveNonzeroInteger::new(num);
-    answer
+    b.read_line(&mut line).map_err(|e| e.into())
+        .and_then(|n: usize| Ok(line.trim()))
+        .and_then(|l: &str| l.parse().map_err(|e: ParseIntError| e.into()))
+        .and_then(|num: i64| PositiveNonzeroInteger::new(num).map_err(|e| e.into()))
 }
 
 // This is a test helper function that turns a &str into a BufReader.
